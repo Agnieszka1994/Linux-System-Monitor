@@ -6,8 +6,9 @@ using LinuxParser::kProcDirectory;
 using std::string;
 // TODO: Return the aggregate CPU utilization
 float Processor::Utilization() { 
+  // current utilisation
   float user, nice, system, idle, iowait, irq;
-  //static float prevUser, prevNice, prevSystem, prevIdle, prevIowait, prevIrq;
+ 
   string line{""};
   string key{""};
   std::ifstream stream(kProcDirectory + kStatFilename);
@@ -21,7 +22,6 @@ float Processor::Utilization() {
     static float PrevNonIdle{};
 
     float Idle = idle + iowait;
-
     float NonIdle = user + nice + system + irq;
 
     float PrevTotal = PrevIdle + PrevNonIdle;
@@ -31,7 +31,9 @@ float Processor::Utilization() {
     float IdleDelta = Idle - PrevIdle;
 
     float CPU_Percentage = (TotalDelta - IdleDelta) / TotalDelta;
+
     PrevIdle = Idle;
     PrevNonIdle = NonIdle;
+    
     return CPU_Percentage;
 }
