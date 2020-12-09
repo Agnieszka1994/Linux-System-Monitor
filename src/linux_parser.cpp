@@ -2,7 +2,7 @@
 #include <unistd.h>
 #include <string>
 #include <vector>
-
+#include <iomanip>
 #include "linux_parser.h"
 
 using std::stof;
@@ -98,8 +98,9 @@ long LinuxParser::UpTime() {
     std::getline(stream, line);
     std::istringstream linestream(line);
     linestream >> systemUpTime;
+    return systemUpTime;
   }
-  return systemUpTime;
+  return -1;
   }
 
 // TODO: Read and return the number of jiffies for the system
@@ -114,19 +115,20 @@ long LinuxParser::Jiffies() {
     std::istringstream linestream(line);
     while(linestream >> key){
       if(key == "cpu"){
-          while(linestream >> value){
-            jiffiesCount += value;
-          }
-          stream.close();
-          return jiffiesCount;
+        while(linestream >> value){
+          jiffiesCount += value;
+        }
+        stream.close();
+        return jiffiesCount;
       }
     }
   }
+  return -1;
 }
 
 // TODO: Read and return the number of active jiffies for a PID
 // REMOVE: [[maybe_unused]] once you define the function
-long LinuxParser::ActiveJiffies(int pid[[maybe_unused]]) { 
+long LinuxParser::ActiveJiffies(int pid) { 
   string line;
   string valuesToIgnore{""};
   long utime, stime, cutime, cstime;
@@ -142,15 +144,29 @@ long LinuxParser::ActiveJiffies(int pid[[maybe_unused]]) {
     }
     linestream >> utime >> stime >> cutime >> cstime;
     activeJiffiesForPID = utime + stime + cutime + cstime;
+    return activeJiffiesForPID; 
   }
-  return activeJiffiesForPID; 
+  return -1;
 }
 
 // TODO: Read and return the number of active jiffies for the system
 long LinuxParser::ActiveJiffies() { return 0; }
 
 // TODO: Read and return the number of idle jiffies for the system
-long LinuxParser::IdleJiffies() { return 0; }
+long LinuxParser::IdleJiffies() { 
+  string line;
+  long cpu, user, nice, system, idle, iowait, irq;
+  std::ifstream stream(kProcDirectory + kStatFilename);
+  if (stream.is_open()) {
+    std::getline(stream, line);
+    std::istringstream linestream(line);
+    
+    linestream >> cpu >> user >> nice >> system >> idle >> iowait >> irq;
+    
+    return idle + iowait; 
+  }
+  return -1; 
+}
 
 // TODO: Read and return CPU utilization
 vector<string> LinuxParser::CpuUtilization() { 
@@ -219,11 +235,30 @@ string LinuxParser::Command(int pid[[maybe_unused]]) { return string(); }
 
 // TODO: Read and return the memory used by a process
 // REMOVE: [[maybe_unused]] once you define the function
-string LinuxParser::Ram(int pid[[maybe_unused]]) { return string(); }
+string LinuxParser::Ram(int pid) { 
+  string pidDirectory = std::to_string(pid);
+  string key;
+  float value;
+  string line;
+  std::ifstream stream(kProcDirectory + pidDirectory + kStatusFilename);
+  if (stream.is_open()) {
+    while (std::getline(stream, line)){
+      std::istringstream linestream(line);
+      while (linestream >> key >> value) {
+        if (key == "VmSize:") {
+          std::ostringstream result;
+          result << std::fixed << std::setprecision(2) << value / 1000;
+          return result.str();
+        }
+      }
+    }
+  }
+  return string();  
+}
 
 // TODO: Read and return the user ID associated with a process
 // REMOVE: [[maybe_unused]] once you define the function
-string LinuxParser::Uid(int pid/*[maybe_unused]]*/) { 
+string LinuxParser::Uid(int pid) { 
   string pidDirectory = std::to_string(pid);
   string key;
   string value;
@@ -266,5 +301,20 @@ string LinuxParser::User(int pid) {
 // TODO: Read and return the uptime of a process
 // REMOVE: [[maybe_unused]] once you define the function
 long LinuxParser::UpTime(int pid[[maybe_unused]]) { 
-  return 0; 
+  string line;
+  string valuesToIgnore{""};
+  long processUpTime;
+  string pidDirectory = std::to_string(pid);
+  std::ifstream stream(kProcDirectory + pidDirectory + kStatFilename);
+
+  if (stream.is_open()) {
+    std::getline(stream, line);
+    std::istringstream linestream(line);
+    for(int i = 0; i < 21; i++){
+      linestream >> valuesToIgnore;
+    }
+    linestream >> processUpTime;
+    return processUpTime / sysconf(_SC_CLK_TCK); 
+  }
+  return -1;
 }
