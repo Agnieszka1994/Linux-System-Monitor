@@ -1,6 +1,6 @@
 #ifndef SYSTEM_PARSER_H
 #define SYSTEM_PARSER_H
-
+#include <unistd.h>
 #include <fstream>
 #include <regex>
 #include <string>
@@ -17,7 +17,7 @@ const std::string kMeminfoFilename{"/meminfo"};
 const std::string kVersionFilename{"/version"};
 const std::string kOSPath{"/etc/os-release"};
 const std::string kPasswordPath{"/etc/passwd"};
-
+const long systemClock{sysconf(_SC_CLK_TCK)};
 // System
 float MemoryUtilization();
 long UpTime();

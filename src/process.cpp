@@ -18,22 +18,17 @@ void Process::updateID(int newId){
 int Process::Pid() { return pid_; }
 
 // TODO: Return this process's CPU utilization
-float Process::CpuUtilization() { 
+float Process::CpuUtilization() const { 
     // CLOCK TO BE CORRECTED    
-    auto clock{2.8f};//{ sysconf(_SC_CLK_TCK) };
-    auto total_time{LinuxParser::ActiveJiffies(pid_)};
-    auto systemUpTime{LinuxParser::UpTime()};
-    auto processStartTime{LinuxParser::UpTime(pid_)}; 
-    auto seconds = systemUpTime - processStartTime  / clock;
-    float cpu_usage{};
-    try{
-            // TO DO - CORRECT CALCULATION! 
-       cpu_usage = 100 * ((total_time / clock) / seconds);
-
-    }catch(...){
-        return -1;
-    }
-    return cpu_usage;
+    //auto clock{ sysconf(_SC_CLK_TCK) };
+    float total_time = LinuxParser::ActiveJiffies(pid_);
+    float systemUpTime = LinuxParser::UpTime();
+    float processStartTime = LinuxParser::UpTime(pid_); 
+    float processDurationInSeconds = systemUpTime - processStartTime;
+    
+    
+    return  (total_time / LinuxParser::systemClock) / processDurationInSeconds;
+ 
 }
 
 
@@ -58,6 +53,10 @@ long int Process::UpTime() {
 
 // TODO: Overload the "less than" comparison operator for Process objects
 // REMOVE: [[maybe_unused]] once you define the function
-bool Process::operator<(Process& other) { 
-    return CpuUtilization() < other.CpuUtilization(); 
+bool Process::operator<(const Process& other) const{ 
+    return CpuUtilization()  < other.CpuUtilization(); 
+}
+
+bool Process::operator>(const Process& other) const{ 
+    return CpuUtilization()  > other.CpuUtilization(); 
 }

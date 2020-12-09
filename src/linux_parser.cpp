@@ -100,7 +100,7 @@ long LinuxParser::UpTime() {
     linestream >> systemUpTime;
     return systemUpTime;
   }
-  return -1;
+  return 0;
   }
 
 // TODO: Read and return the number of jiffies for the system
@@ -247,7 +247,7 @@ string LinuxParser::Ram(int pid) {
       while (linestream >> key >> value) {
         if (key == "VmSize:") {
           std::ostringstream result;
-          result << std::fixed << std::setprecision(2) << value / 1000;
+          result << std::setprecision(6) << value / 1000;
           return result.str();
         }
       }
@@ -300,10 +300,10 @@ string LinuxParser::User(int pid) {
 
 // TODO: Read and return the uptime of a process
 // REMOVE: [[maybe_unused]] once you define the function
-long LinuxParser::UpTime(int pid[[maybe_unused]]) { 
-  string line;
+long LinuxParser::UpTime(int pid) { 
+  string line{""};
   string valuesToIgnore{""};
-  long processUpTime;
+  long processUpTime{};
   string pidDirectory = std::to_string(pid);
   std::ifstream stream(kProcDirectory + pidDirectory + kStatFilename);
 
@@ -314,7 +314,7 @@ long LinuxParser::UpTime(int pid[[maybe_unused]]) {
       linestream >> valuesToIgnore;
     }
     linestream >> processUpTime;
-    return processUpTime / sysconf(_SC_CLK_TCK); 
+    return processUpTime / LinuxParser::systemClock; 
   }
-  return -1;
+  return 1;
 }
