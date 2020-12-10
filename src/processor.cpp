@@ -4,9 +4,9 @@
 using LinuxParser::kStatFilename;
 using LinuxParser::kProcDirectory;
 using std::string;
-// TODO: Return the aggregate CPU utilization
+
 float Processor::Utilization() { 
-  // current utilisation
+
   float user, nice, system, idle, iowait, irq;
  
   string line{""};
@@ -18,22 +18,20 @@ float Processor::Utilization() {
       std::string key{};
       linestream >> key >> user >> nice >> system >> idle >> iowait >> irq;
   }
-    static float PrevIdle{};
-    static float PrevNonIdle{};
 
-    float Idle = idle + iowait;
-    float NonIdle = user + nice + system + irq;
+    const float Idle = idle + iowait;
+    const float NonIdle = user + nice + system + irq;
 
-    float PrevTotal = PrevIdle + PrevNonIdle;
-    float Total = Idle + NonIdle;
+    const float PrevTotal = idle_ + nonIdle_;
+    const float Total = Idle + NonIdle;
     
-    float TotalDelta = Total - PrevTotal;
-    float IdleDelta = Idle - PrevIdle;
+    const float TotalDelta = Total - PrevTotal;
+    const float IdleDelta = Idle - idle_;
 
-    float CPU_Percentage = (TotalDelta - IdleDelta) / TotalDelta;
+    const float CPU_Percentage = (TotalDelta - IdleDelta) / TotalDelta;
 
-    PrevIdle = Idle;
-    PrevNonIdle = NonIdle;
+    idle_ = Idle;
+    nonIdle_ = NonIdle;
     
     return CPU_Percentage;
 }
