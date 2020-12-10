@@ -2,7 +2,7 @@
 
 This repo contains the final project of the 2nd course of the Udacity Nanodegree. 
 
-This project is an interactive Linux process-viewer(similar to the htop) that shows a frequently updated list of the processes running on a computer.
+This is an interactive Linux process-viewer (similar to the htop) that shows a frequently updated list of the processes running on a computer.
 
 
 ## Requirements
