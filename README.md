@@ -22,5 +22,5 @@ make
 
 ## Sample usage
 **The real time view upon startup.**
-[![img]()]()
+[![img](https://github.com/Agnieszka1994/Linux-System-Monitor/blob/main/images/system-monitor.gif)](https://github.com/Agnieszka1994/Linux-System-Monitor/blob/main/images/)
 
