@@ -11,9 +11,7 @@ using std::to_string;
 using std::vector;
 
 string LinuxParser::OperatingSystem() {
-  string line;
-  string key;
-  string value;
+  string key{""}, line{""}, value{""};
   std::ifstream filestream(kOSPath);
   if (filestream.is_open()) {
     while (std::getline(filestream, line)) {
@@ -24,10 +22,12 @@ string LinuxParser::OperatingSystem() {
       while (linestream >> key >> value) {
         if (key == "PRETTY_NAME") {
           std::replace(value.begin(), value.end(), '_', ' ');
+          filestream.close();
           return value;
         }
       }
     }
+    filestream.close();
   }
   return value;
 }
@@ -39,6 +39,9 @@ string LinuxParser::Kernel() {
     std::getline(stream, line);
     std::istringstream linestream(line);
     linestream >> os >> version >> kernel;
+
+    stream.close();
+    return kernel;
   }
   return kernel;
 }
@@ -63,7 +66,7 @@ vector<int> LinuxParser::Pids() {
 }
 
 float LinuxParser::MemoryUtilization() { 
-  float memTotal{}, memAvailable{}, value{};
+  float memTotal{1}, memAvailable{}, value{};
   string line{""}, key{""};
   std::ifstream stream(kProcDirectory + kMeminfoFilename);
   if (stream.is_open()) {
@@ -78,8 +81,10 @@ float LinuxParser::MemoryUtilization() {
         }
       }
     }
+    stream.close();
+    return (memTotal - memAvailable) / memTotal;
   }
-  return (memTotal - memAvailable) / memTotal;
+  return 1;
 }
 
 long LinuxParser::UpTime() { 
@@ -90,6 +95,7 @@ long LinuxParser::UpTime() {
     std::getline(stream, line);
     std::istringstream linestream(line);
     linestream >> systemUpTime;
+    stream.close();
     return systemUpTime;
   }
   return 0;
@@ -131,6 +137,7 @@ long LinuxParser::ActiveJiffies(int pid) {
     }
     linestream >> utime >> stime >> cutime >> cstime;
     activeJiffiesForPID = utime + stime + cutime + cstime;
+    stream.close();
     return activeJiffiesForPID; 
   }
   return -1;
@@ -149,7 +156,7 @@ long LinuxParser::IdleJiffies() {
     std::istringstream linestream(line);
     
     linestream >> cpu >> user >> nice >> system >> idle >> iowait >> irq;
-    
+    stream.close();
     return idle + iowait; 
   }
   return -1; 
@@ -164,11 +171,12 @@ vector<string> LinuxParser::CpuUtilization() {
       std::istringstream linestream(line);
       linestream >> key; 
       if (key == "cpu") {
-         while(!linestream.eof()){
-           string util;
-           linestream >> util;
-           cpuUtilisation.push_back(util);
-         }
+        while(!linestream.eof()){
+          string util;
+          linestream >> util;
+          cpuUtilisation.push_back(util);
+        }
+        stream.close();
         return cpuUtilisation;
       }
     }
@@ -185,10 +193,12 @@ int LinuxParser::TotalProcesses() {
       std::istringstream linestream(line);
       while (linestream >> key >> value) {
         if (key == "processes") {
+          stream.close();
           return value;
         }
       }
     }
+    stream.close();
   }
   return 0;
 }
@@ -202,10 +212,12 @@ int LinuxParser::RunningProcesses() {
       std::istringstream linestream(line);
       while (linestream >> key >> value) {
         if (key == "procs_running") {
+          stream.close();
           return value;
         }
       }
     }
+    stream.close();
   }
   return 0; 
 }
@@ -233,10 +245,12 @@ string LinuxParser::Ram(int pid) {
         if (key == "VmSize:") {
           std::ostringstream result;
           result << std::setprecision(6) << value / 1000;
+          stream.close();
           return result.str();
         }
       }
     }
+    stream.close();
   }
   return string();  
 }
@@ -250,12 +264,14 @@ string LinuxParser::Uid(int pid) {
       std::istringstream linestream(line);
       while (linestream >> key >> value) {
         if (key == "Uid:") {
+          stream.close();
           return value;
         }
       }
     }
+    stream.close();
   }
-  return string();   
+  return value;   
 }
 
 string LinuxParser::User(int pid) { 
@@ -268,9 +284,11 @@ string LinuxParser::User(int pid) {
       std::istringstream linestream(line);
       linestream >> username >> xToIgnore >> id;
       if (id == userId) {
+        stream.close();
         return username;
       }   
     }
+    stream.close();
   }
   return string(); 
 }
@@ -288,6 +306,7 @@ long LinuxParser::UpTime(int pid) {
       linestream >> valuesToIgnore;
     }
     linestream >> processUpTime;
+    stream.close();
     return processUpTime / LinuxParser::systemClock; 
   }
   return 1;
